@@ -1,4 +1,4 @@
-name: edu.teco.open_earable.sport_study
+name: open_earable_sport_study
 description: An app for the OpenEarable sport study
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -44,6 +44,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_colorpicker: ^1.1.0
   flutter_svg: ^2.0.17
+  provider: ^6.1.2
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

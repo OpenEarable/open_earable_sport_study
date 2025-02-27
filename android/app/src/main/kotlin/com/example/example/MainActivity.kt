@@ -1,4 +1,4 @@
-package edu.teco.open_earable.sport_study
+package edu.teco.openearable.sportstudy
 
 import io.flutter.embedding.android.FlutterActivity
 
