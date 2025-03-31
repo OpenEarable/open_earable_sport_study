@@ -2,12 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'controllers/connected_device_controller.dart';
+import 'controllers/settings_controller.dart';
 import 'pages/home_page.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ConnectedDeviceController(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsController>(
+          create: (_) => SettingsController(),
+        ),
+        ChangeNotifierProxyProvider<SettingsController, ConnectedDeviceController>(
+          create: (context) => ConnectedDeviceController(
+            settingsController: Provider.of<SettingsController>(context, listen: false),
+          ),
+          update: (context, settingsController, connectedDeviceController) => connectedDeviceController!,
+        ),
+      ],
       child: const MyApp(),
     ),
   );
