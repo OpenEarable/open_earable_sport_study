@@ -36,6 +36,11 @@ dependencies:
       url: https://github.com/OpenEarable/open_earable_flutter.git
       ref: main
 
+  open_earable_flutter_edge_ml_connection:
+    git:
+      url: git@github.com:OpenEarable/open_earable_flutter_edge_ml_connection.git
+      ref: main
+
   permission_handler: ^11.3.1
 
 
