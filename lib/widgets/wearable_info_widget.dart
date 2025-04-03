@@ -75,26 +75,6 @@ class _WearableInfoWidgetState extends State<WearableInfoWidget> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.wearable is DeviceFirmwareVersion)
-                FutureBuilder<String?>(
-                  future: (widget.wearable as DeviceFirmwareVersion)
-                      .readDeviceFirmwareVersion(),
-                  builder: (context, snapshot) {
-                    return SelectableText(
-                      "Firmware: ${snapshot.data}",
-                    );
-                  },
-                ),
-              if (widget.wearable is DeviceHardwareVersion)
-                FutureBuilder<String?>(
-                  future: (widget.wearable as DeviceHardwareVersion)
-                      .readDeviceHardwareVersion(),
-                  builder: (context, snapshot) {
-                    return SelectableText(
-                      "Hardware: ${snapshot.data}",
-                    );
-                  },
-                ),
               if (widget.wearable is BatteryLevelService)
                 StreamBuilder(
                   stream: (widget.wearable as BatteryLevelService)
