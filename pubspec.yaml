@@ -48,6 +48,8 @@ dependencies:
   collection: ^1.19.1
   shared_preferences: ^2.5.3
   slide_to_act: ^2.0.2
+  open_file: ^3.5.10
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
