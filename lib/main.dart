@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'controllers/connected_device_controller.dart';
 import 'controllers/settings_controller.dart';
+import 'controllers/recording_controller.dart';
 import 'pages/home_page.dart';
 
 void main() {
@@ -12,11 +13,28 @@ void main() {
         ChangeNotifierProvider<SettingsController>(
           create: (_) => SettingsController(),
         ),
-        ChangeNotifierProxyProvider<SettingsController, ConnectedDeviceController>(
+        ChangeNotifierProxyProvider<SettingsController,
+            ConnectedDeviceController>(
           create: (context) => ConnectedDeviceController(
-            settingsController: Provider.of<SettingsController>(context, listen: false),
+            settingsController: Provider.of<SettingsController>(
+              context,
+              listen: false,
+            ),
           ),
-          update: (context, settingsController, connectedDeviceController) => connectedDeviceController!,
+          update: (context, settingsController, connectedDeviceController) =>
+              connectedDeviceController!,
+        ),
+        ChangeNotifierProvider<RecordingController>(
+          create: (context) => RecordingController(
+            deviceController: Provider.of<ConnectedDeviceController>(
+              context,
+              listen: false,
+            ),
+            settingsController: Provider.of<SettingsController>(
+              context,
+              listen: false,
+            ),
+          ),
         ),
       ],
       child: const MyApp(),
