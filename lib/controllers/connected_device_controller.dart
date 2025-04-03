@@ -43,6 +43,17 @@ class ConnectedDeviceController extends ChangeNotifier {
         }
       });
 
+      // Enable every sensor
+      if (wearable is SensorManager) {
+        for (Sensor sensor in (wearable as SensorManager).sensors) {
+          for (SensorConfiguration config in sensor.relatedConfigurations) {
+            if (config is SensorFrequencyConfiguration) {
+              config.setMaximumFrequency();
+            }
+          }
+        }
+      }
+
       connectingDevices.removeWhere((d) => d.id == wearable.deviceId);
       connectedDevices.add(wearable);
       notifyListeners();
