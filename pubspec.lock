@@ -285,7 +285,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: ca8c2311421939e62ef8802b8858d1342a123cd0
+      resolved-ref: "4e2c2078cf58551407fcf624802b08301e55acaf"
       url: "https://github.com/OpenEarable/open_earable_flutter.git"
     source: git
     version: "0.0.5"
@@ -294,8 +294,8 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "4ded3285aff581d7c27e7f5ec7f9876bb9714ae9"
-      url: "git@github.com:OpenEarable/open_earable_flutter_edge_ml_connection.git"
+      resolved-ref: be3d857ad16697ed88fff981debd357b45db1c73
+      url: "https://github.com/OpenEarable/open_earable_flutter_edge_ml_connection.git"
     source: git
     version: "0.0.1"
   open_file:
