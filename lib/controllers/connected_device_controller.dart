@@ -17,6 +17,13 @@ class ConnectedDeviceController extends ChangeNotifier {
 
   late final SettingsController _settingsController;
 
+  final Map<String, _HeartRateEntry> _heartRateMap = {};
+  Timer? _heartRateResetTimer;
+  final StreamController<int?> _heartRateStreamController =
+      StreamController<int?>.broadcast();
+
+  Stream<int?> get heartRateStream => _heartRateStreamController.stream;
+
   // Lock state for auto-reconnect functionality
   bool _isLocked = false;
 
@@ -25,6 +32,34 @@ class ConnectedDeviceController extends ChangeNotifier {
   void setLock(bool value) {
     _isLocked = value;
     notifyListeners();
+  }
+
+  void _updateHeartRate(String wearableId, int? heartRate) {
+    final now = DateTime.now();
+    if (heartRate == null) {
+      _heartRateMap.remove(wearableId);
+    } else {
+      _heartRateMap[wearableId] = _HeartRateEntry(heartRate, now);
+    }
+
+    // Remove entries older than 2 seconds
+    final threshold = DateTime.now().subtract(const Duration(seconds: 2));
+    _heartRateMap
+        .removeWhere((id, entry) => entry.timestamp.isBefore(threshold));
+
+    if (_heartRateMap.isEmpty) {
+      _heartRateStreamController.add(null);
+    } else {
+      final maxEntry = _heartRateMap.entries
+          .reduce((a, b) => a.value.heartRate >= b.value.heartRate ? a : b);
+      _heartRateStreamController.add(maxEntry.value.heartRate);
+    }
+
+    // Reset the 3-second timer that sends null if no new heart rate is received
+    _heartRateResetTimer?.cancel();
+    _heartRateResetTimer = Timer(const Duration(seconds: 3), () {
+      _heartRateStreamController.add(null);
+    });
   }
 
   ConnectedDeviceController({required SettingsController settingsController}) {
@@ -50,6 +85,16 @@ class ConnectedDeviceController extends ChangeNotifier {
             if (config is SensorFrequencyConfiguration) {
               config.setMaximumFrequency();
             }
+          }
+
+          // Listen for heart rate updates
+          if (sensor is HeartRateSensor) {
+            StreamSubscription hrs = sensor.sensorStream.listen((heartRate) {
+              _updateHeartRate(wearable.deviceId, heartRate.heartRateBpm);
+            });
+            wearable.addDisconnectListener(() {
+              hrs.cancel();
+            });
           }
         }
       }
@@ -122,6 +167,15 @@ class ConnectedDeviceController extends ChangeNotifier {
   void dispose() {
     _settingsController.removeListener(_onSettingsChanged);
     _scanSubscription?.cancel();
+    _heartRateResetTimer?.cancel();
+    _heartRateStreamController.close();
     super.dispose();
   }
+}
+
+class _HeartRateEntry {
+  final int heartRate;
+  final DateTime timestamp;
+
+  _HeartRateEntry(this.heartRate, this.timestamp);
 }
