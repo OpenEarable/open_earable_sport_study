@@ -7,6 +7,9 @@ import '../models/auto_connect_device.dart';
 import 'settings_controller.dart';
 
 class ConnectedDeviceController extends ChangeNotifier {
+  late final SettingsController _settingsController;
+
+  // Wearable management
   final WearableManager _wearableManager = WearableManager();
   StreamSubscription? _scanSubscription;
 
@@ -15,8 +18,9 @@ class ConnectedDeviceController extends ChangeNotifier {
   Set<DiscoveredDevice> connectingDevices = {};
   Set<Wearable> connectedDevices = {};
 
-  late final SettingsController _settingsController;
+  final List<void Function(Wearable)> _onConnectCallbacks = [];
 
+  // For the heart rate stream
   final Map<String, _HeartRateEntry> _heartRateMap = {};
   Timer? _heartRateResetTimer;
   final StreamController<int?> _heartRateStreamController =
@@ -32,6 +36,11 @@ class ConnectedDeviceController extends ChangeNotifier {
   void setLock(bool value) {
     _isLocked = value;
     notifyListeners();
+  }
+
+  /// Register a callback to be called when a device connects.
+  void registerOnConnectCallback(void Function(Wearable) callback) {
+    _onConnectCallbacks.add(callback);
   }
 
   void _updateHeartRate(String wearableId, int? heartRate) {
@@ -102,6 +111,10 @@ class ConnectedDeviceController extends ChangeNotifier {
       connectingDevices.removeWhere((d) => d.id == wearable.deviceId);
       connectedDevices.add(wearable);
       notifyListeners();
+
+      for (final callback in _onConnectCallbacks) {
+        callback(wearable);
+      }
     });
 
     // Listen for new connecting devices
