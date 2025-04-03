@@ -6,6 +6,7 @@ import '../controllers/connected_device_controller.dart';
 import '../controllers/recording_controller.dart';
 import '../controllers/settings_controller.dart';
 import '../widgets/wearable_info_list_widget.dart';
+import 'recording_ended_page.dart';
 
 class RecordingPage extends StatelessWidget {
   const RecordingPage({Key? key}) : super(key: key);
@@ -71,6 +72,11 @@ class RecordingPage extends StatelessWidget {
                   ),
                   onSubmit: () async {
                     recordingController.stop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RecordingEndedPage(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
