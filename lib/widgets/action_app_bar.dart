@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../pages/connected_devices_page.dart';
 import '../pages/stored_recordings_page.dart';
-import '../pages/settings_page.dart';
 
 class ActionAppBar extends AppBar {
   ActionAppBar({Key? key})
@@ -27,13 +26,6 @@ class ActionAppBar extends AppBar {
                         builder: (_) => const StoredRecordingsPage(),
                       ),
                     );
-                  } else if (value == 'settings') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SettingsPage(),
-                      ),
-                    );
                   }
                 },
                 itemBuilder: (context) => const [
@@ -44,10 +36,6 @@ class ActionAppBar extends AppBar {
                   PopupMenuItem(
                     value: 'recordings',
                     child: Text('Stored Recordings'),
-                  ),
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: Text('Settings'),
                   ),
                 ],
               ),
