@@ -52,6 +52,7 @@ dependencies:
   provider: ^6.1.2
   collection: ^1.19.1
   shared_preferences: ^2.5.3
+  slide_to_act: ^2.0.2
 
 dev_dependencies:
   flutter_test:

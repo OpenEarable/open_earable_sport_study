@@ -5,6 +5,7 @@ import 'controllers/connected_device_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/recording_controller.dart';
 import 'pages/home_page.dart';
+import 'pages/recording_page.dart';
 
 void main() {
   runApp(
@@ -47,10 +48,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    final recordingController = Provider.of<RecordingController>(context);
+
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Bluetooth Devices App',
-      home: HomePage(),
+      home: recordingController.isRecording
+          ? const RecordingPage()
+          : const HomePage(),
     );
   }
 }
