@@ -22,47 +22,49 @@ class ConnectedDevicesPage extends StatelessWidget {
         title: const Text("Connected Devices"),
         leading: const BackButton(),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Icon(
-                  lockedConnections ? Icons.lock : Icons.lock_open,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  lockedConnections
-                      ? "Auto-(Re-)Connect ON"
-                      : "Auto-(Re-)Connect OFF",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Switch(
-                  value: lockedConnections,
-                  onChanged: (bool value) {
-                    if (value) {
-                      connectedDevicesController
-                          .persistConnectedDevicesForAutoConnect();
-                    } else {
-                      settingsController.setAutoConnectDevices(null);
-                    }
-                    connectedDevicesController.setLock(value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ScanView(
-                enableManualConnectionChange: !lockedConnections,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(
+                    lockedConnections ? Icons.lock : Icons.lock_open,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    lockedConnections
+                        ? "Auto-(Re-)Connect ON"
+                        : "Auto-(Re-)Connect OFF",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Switch(
+                    value: lockedConnections,
+                    onChanged: (bool value) {
+                      if (value) {
+                        connectedDevicesController
+                            .persistConnectedDevicesForAutoConnect();
+                      } else {
+                        settingsController.setAutoConnectDevices(null);
+                      }
+                      connectedDevicesController.setLock(value);
+                    },
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: ScanView(
+                  enableManualConnectionChange: !lockedConnections,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
