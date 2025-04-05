@@ -9,37 +9,41 @@ class ActionAppBar extends AppBar {
           key: key,
           title: const Text("Home"),
           actions: <Widget>[
+            const SizedBox(width: 8),
             Builder(
-              builder: (context) => PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'connected') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ConnectedDevicesPage(),
-                      ),
-                    );
-                  } else if (value == 'recordings') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StoredRecordingsPage(),
-                      ),
-                    );
-                  }
+              builder: (context) => ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const StoredRecordingsPage(),
+                    ),
+                  );
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: 'connected',
-                    child: Text('Connected Devices'),
-                  ),
-                  PopupMenuItem(
-                    value: 'recordings',
-                    child: Text('Stored Recordings'),
-                  ),
-                ],
+                child: const Text('Recordings'),
               ),
             ),
+            const SizedBox(width: 8),
+            Builder(
+              builder: (context) => ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ConnectedDevicesPage(),
+                    ),
+                  );
+                },
+                child: const Text('Devices'),
+              ),
+            ),
+            const SizedBox(width: 8),
           ],
         );
 }

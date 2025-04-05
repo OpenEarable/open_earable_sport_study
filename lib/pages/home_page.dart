@@ -79,6 +79,11 @@ class HomePage extends StatelessWidget {
                   onPressed: settingsController.participantId.isEmpty
                       ? null
                       : recordingController.start,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size.fromHeight(60),
+                  ),
                   child: const Text('Start Recording'),
                 ),
               ),
