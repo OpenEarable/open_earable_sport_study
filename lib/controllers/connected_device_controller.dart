@@ -99,6 +99,7 @@ class ConnectedDeviceController extends ChangeNotifier {
           // Listen for heart rate updates
           if (sensor is HeartRateSensor) {
             StreamSubscription hrs = sensor.sensorStream.listen((heartRate) {
+              print("Heart rate: ${heartRate.heartRateBpm} | ${DateTime.now().toIso8601String()}");
               _updateHeartRate(wearable.deviceId, heartRate.heartRateBpm);
             });
             wearable.addDisconnectListener(() {
