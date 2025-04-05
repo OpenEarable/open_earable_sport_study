@@ -42,14 +42,38 @@ class ConnectedDevicesPage extends StatelessWidget {
                   ),
                   Switch(
                     value: lockedConnections,
-                    onChanged: (bool value) {
+                    onChanged: (bool value) async {
                       if (value) {
                         connectedDevicesController
                             .persistConnectedDevicesForAutoConnect();
+                        connectedDevicesController.setLock(value);
                       } else {
-                        settingsController.setAutoConnectDevices(null);
+                        bool? confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Remove Lock'),
+                            content: const Text(
+                              'Do you really want to remove the lock?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Yes'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          settingsController.setAutoConnectDevices(null);
+                          connectedDevicesController.setLock(value);
+                        }
                       }
-                      connectedDevicesController.setLock(value);
                     },
                   ),
                 ],
