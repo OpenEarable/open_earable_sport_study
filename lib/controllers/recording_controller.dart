@@ -91,6 +91,7 @@ class RecordingController extends ChangeNotifier {
       _recordingDuration = Duration.zero;
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _recordingDuration += const Duration(seconds: 1);
+        print("New duration: $_recordingDuration");
         notifyListeners();
       });
       notifyListeners();
