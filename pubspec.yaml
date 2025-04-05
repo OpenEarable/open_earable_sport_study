@@ -52,6 +52,12 @@ dependencies:
   share_plus: ^10.1.4
   flutter_foreground_task: ^8.17.0
 
+dependency_overrides:
+  open_earable_flutter:
+    git:
+      url: https://github.com/OpenEarable/open_earable_flutter.git
+      ref: tmp_no_log
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
