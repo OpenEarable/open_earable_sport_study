@@ -43,11 +43,50 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  bool _isActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      // Consider the app active only when resumed; otherwise, mark it as not active
+      _isActive = (state == AppLifecycleState.resumed);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_isActive) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Bluetooth Devices App',
+        home: Scaffold(
+          body: Center(
+            child: Text('Not Active'),
+          ),
+        ),
+      );
+    }
+
     final recordingController = Provider.of<RecordingController>(context);
 
     return MaterialApp(

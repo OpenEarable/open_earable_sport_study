@@ -9,15 +9,13 @@ class RecordingController extends ChangeNotifier {
   final SettingsController settingsController;
 
   bool _isRecording = false;
-  Duration _recordingDuration = Duration.zero;
-  Timer? _timer;
+  DateTime? _recordingStart;
 
   bool get isRecording => _isRecording;
 
-  Duration get recordingDuration => _recordingDuration;
+  DateTime? get recordingStart => _recordingStart;
 
   LastRecording? _lastRecording;
-
   LastRecording? get lastRecording => _lastRecording;
 
   // Heart rate for sync access
@@ -88,11 +86,7 @@ class RecordingController extends ChangeNotifier {
         _exerciseHeartRate = _currentHeartRate;
       });
 
-      _recordingDuration = Duration.zero;
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        _recordingDuration += const Duration(seconds: 1);
-        notifyListeners();
-      });
+      _recordingStart = DateTime.now();
       notifyListeners();
     }
   }
@@ -105,19 +99,16 @@ class RecordingController extends ChangeNotifier {
 
       _edgeMLConnection?.stop();
 
-      _timer?.cancel();
-      _timer = null;
-
       // Save the last recording metadata
       _lastRecording = LastRecording(
         participantId: _participantId,
-        duration: _recordingDuration,
+        duration: DateTime.now().difference(_recordingStart!),
         startHeartRate: _startHeartRate,
         exerciseHeartRate: _exerciseHeartRate,
       );
 
       _edgeMLConnection = null;
-      _recordingDuration = Duration.zero;
+      _recordingStart = null;
       notifyListeners();
     }
   }

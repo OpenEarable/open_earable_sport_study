@@ -5,6 +5,7 @@ import 'package:slide_to_act/slide_to_act.dart';
 import '../controllers/connected_device_controller.dart';
 import '../controllers/recording_controller.dart';
 import '../controllers/settings_controller.dart';
+import '../widgets/current_recording_duration_widget.dart';
 import '../widgets/wearable_info_list_widget.dart';
 import 'recording_ended_page.dart';
 
@@ -17,7 +18,6 @@ class RecordingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recordingController = Provider.of<RecordingController>(context);
     final settingsController = Provider.of<SettingsController>(context);
     final connectedDeviceController =
         Provider.of<ConnectedDeviceController>(context);
@@ -37,10 +37,7 @@ class RecordingPage extends StatelessWidget {
                   "Participant ID: ${settingsController.participantId}",
                   style: const TextStyle(fontSize: 16),
                 ),
-                Text(
-                  _formatDuration(recordingController.recordingDuration),
-                  style: const TextStyle(fontSize: 16),
-                ),
+                const CurrentRecordingDurationWidget(),
                 const SizedBox(height: 20),
                 StreamBuilder(
                   stream: connectedDeviceController.heartRateStream,
@@ -71,7 +68,7 @@ class RecordingPage extends StatelessWidget {
                     color: Colors.white,
                   ),
                   onSubmit: () async {
-                    recordingController.stop();
+                    context.read<RecordingController>().stop();
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const RecordingEndedPage(),
