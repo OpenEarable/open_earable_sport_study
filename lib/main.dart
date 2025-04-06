@@ -34,6 +34,16 @@ void startCallback() {
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
+
+  _settingsController = SettingsController();
+  _connectedDeviceController = ConnectedDeviceController(
+    settingsController: _settingsController!,
+  );
+  _recordingController = RecordingController(
+    deviceController: _connectedDeviceController!,
+    settingsController: _settingsController!,
+  );
+
   FlutterForegroundTask.initCommunicationPort();
 
   print(" ====== > main");
