@@ -53,7 +53,7 @@ class RecordingEndedPage extends StatelessWidget {
                     text: TextSpan(
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                       children: [
-                        const TextSpan(text: 'Start Heart Rate: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const TextSpan(text: 'Ausgangspuls: ', style: TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(text: lastRecording.startHeartRate != null ? '${lastRecording.startHeartRate}bpm' : 'N/A'),
                       ],
                     ),
@@ -63,7 +63,7 @@ class RecordingEndedPage extends StatelessWidget {
                     text: TextSpan(
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                       children: [
-                        const TextSpan(text: 'Exercise Heart Rate: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const TextSpan(text: 'Belastungspuls (nach 2min): ', style: TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(text: lastRecording.exerciseHeartRate != null ? '${lastRecording.exerciseHeartRate}bpm' : 'N/A'),
                       ],
                     ),
