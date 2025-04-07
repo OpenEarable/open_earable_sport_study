@@ -72,6 +72,7 @@ class RecordingPage extends StatelessWidget {
                   ),
                   onSubmit: () async {
                     recordingController.stop();
+                    settingsController.setParticipantId("");
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const RecordingEndedPage(),
