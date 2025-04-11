@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:open_earable_flutter_edge_ml_connection/open_earable_flutter_edge_ml_connection.dart';
 import 'connected_device_controller.dart';
 import 'settings_controller.dart';
@@ -52,10 +53,162 @@ class RecordingController extends ChangeNotifier {
     );
   }
 
+  /// Initialize sensors for recording
+  void _initSensorsForRecording() {
+    for (final wearable in deviceController.connectedDevices) {
+      if (wearable is! SensorManager) {
+        continue;
+      }
+
+      if (wearable is OpenEarableV2) {
+        // Special case for the OpenEarable V2
+        // Set every sensor to maximum frequency to enable it
+        for (var sensor in (wearable as SensorManager).sensors) {
+          if (sensor.sensorName == "ACCELEROMETER" &&
+              sensor.axisCount >= 1 &&
+              sensor.axisUnits[0] == "g") {
+            // Bone conductor, we don't want to record this.
+            // Extra case because we have two "ACCELEROMETER" sensors
+            continue;
+          }
+
+          int? targetFrequencyHz;
+          bool record = false;
+          bool stream = false;
+
+          switch (sensor.sensorName) {
+            case "ACCELEROMETER":
+              targetFrequencyHz = 50;
+              record = true;
+              break;
+            case "GYROSCOPE":
+              targetFrequencyHz = 50;
+              record = true;
+              break;
+            case "MAGNETOMETER":
+              targetFrequencyHz = 50;
+              record = true;
+              break;
+            case "PHOTOPLETHYSMOGRAPHY":
+              targetFrequencyHz = 400;
+              record = true;
+              break;
+            case "BAROMETER":
+              targetFrequencyHz = 20;
+              record = true;
+              stream = true;
+              break;
+            default:
+              targetFrequencyHz = null;
+          }
+
+          if (targetFrequencyHz == null) {
+            continue;
+          }
+          for (var configuration in sensor.relatedConfigurations) {
+            if (configuration is SensorConfigurationOpenEarableV2) {
+              configuration.setFrequencyBestEffort(
+                targetFrequencyHz,
+                streamData: stream,
+                recordData: record,
+              );
+            } else if (configuration is SensorFrequencyConfiguration) {
+              configuration.setFrequencyBestEffort(targetFrequencyHz);
+            }
+          }
+        }
+      } else {
+        // Set every sensor to maximum frequency to enable it
+        for (var sensor in (wearable as SensorManager).sensors) {
+          for (var configuration in sensor.relatedConfigurations) {
+            if (configuration is SensorFrequencyConfiguration) {
+              configuration.setMaximumFrequency();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /// Disables sensors after recording
+  void _disableSensorsAfterRecording() {
+    for (final wearable in deviceController.connectedDevices) {
+      if (wearable is! SensorManager) {
+        continue;
+      }
+
+      if (wearable is OpenEarableV2) {
+        // Special case for the OpenEarable V2
+        // Set every sensor to maximum frequency to enable it
+        for (var sensor in (wearable as SensorManager).sensors) {
+          if (sensor.sensorName == "ACCELEROMETER" &&
+              sensor.axisCount >= 1 &&
+              sensor.axisUnits[0] == "g") {
+            // Bone conductor, we don't want to record this.
+            // Extra case because we have two "ACCELEROMETER" sensors
+            continue;
+          }
+
+          int? targetFrequencyHz;
+
+          switch (sensor.sensorName) {
+            case "ACCELEROMETER":
+            case "GYROSCOPE":
+            case "MAGNETOMETER":
+            case "PHOTOPLETHYSMOGRAPHY":
+            case "BAROMETER":
+              targetFrequencyHz = 0;
+              break;
+            default:
+              targetFrequencyHz = null;
+          }
+
+          if (targetFrequencyHz == null) {
+            continue;
+          }
+          for (var configuration in sensor.relatedConfigurations) {
+            if (configuration is SensorConfigurationOpenEarableV2) {
+              configuration.setFrequencyBestEffort(
+                targetFrequencyHz,
+                streamData: false,
+                recordData: false,
+              );
+            } else if (configuration is SensorFrequencyConfiguration) {
+              configuration.setFrequencyBestEffort(targetFrequencyHz);
+            }
+          }
+        }
+      } else {
+        // Set every sensor to maximum frequency to enable it
+        for (var sensor in (wearable as SensorManager).sensors) {
+          for (var configuration in sensor.relatedConfigurations) {
+            if (configuration is SensorFrequencyConfiguration) {
+              configuration.setFrequencyBestEffort(0);
+            }
+          }
+        }
+      }
+
+      for (Sensor sensor in (wearable as SensorManager).sensors) {
+        // Enable heart rate and HRV sensors
+        if (sensor is HeartRateSensor ||
+            sensor is HeartRateVariabilitySensor) {
+          for (SensorConfiguration config in sensor.relatedConfigurations) {
+            if (config is SensorFrequencyConfiguration) {
+              config.setMaximumFrequency();
+            }
+          }
+        }
+      }
+    }
+  }
+
   void start() async {
     if (!_isRecording) {
       _isRecording = true;
       _lastRecording = null;
+
+      _initSensorsForRecording();
 
       // Some data of the current recording
       _startHeartRate = _currentHeartRate;
@@ -103,6 +256,7 @@ class RecordingController extends ChangeNotifier {
       _exerciseTimer?.cancel();
       _exerciseTimer = null;
 
+      _disableSensorsAfterRecording();
       _edgeMLConnection?.stop();
 
       _timer?.cancel();
