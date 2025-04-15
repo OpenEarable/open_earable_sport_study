@@ -101,10 +101,10 @@ packages:
     dependency: transitive
     description:
       name: edge_ml_dart
-      sha256: b028f0e6796f76dd8b552150b7a3fff86df7d4869e0b2e6b024c9b1135ce6ec5
+      sha256: "0fba83dfa7b5658859d22c5fa6352cae8aa3826a11954d3e41a5f327ef611588"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "0.0.4"
   fake_async:
     dependency: transitive
     description:
@@ -294,7 +294,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: be3d857ad16697ed88fff981debd357b45db1c73
+      resolved-ref: "3a198da0c1c2d856edfe5319c1e5a920fd54a780"
       url: "https://github.com/OpenEarable/open_earable_flutter_edge_ml_connection.git"
     source: git
     version: "0.0.1"
@@ -506,6 +506,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.4"
+  semaphore_plus:
+    dependency: transitive
+    description:
+      name: semaphore_plus
+      sha256: "2e05324ace8f4db9aa7ac9a9fa77e97082da4b0caff692e90a2c6f780658878f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   share_plus:
     dependency: "direct main"
     description:
