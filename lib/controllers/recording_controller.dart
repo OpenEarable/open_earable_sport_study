@@ -94,7 +94,7 @@ class RecordingController extends ChangeNotifier {
               record = true;
               break;
             case "BAROMETER":
-              targetFrequencyHz = 20;
+              targetFrequencyHz = 200;
               record = true;
               stream = true;
               break;
