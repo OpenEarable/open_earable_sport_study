@@ -4,33 +4,34 @@ import 'package:flutter/material.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 
 import '../models/auto_connect_device.dart';
+import '../services/background_service.dart';
 import 'settings_controller.dart';
 
 class ConnectedDeviceController extends ChangeNotifier {
   late final SettingsController _settingsController;
-
-  // Wearable management
-  final WearableManager _wearableManager = WearableManager();
-  StreamSubscription? _scanSubscription;
+  final BackgroundServiceManager _backgroundService = BackgroundServiceManager.instance;
 
   // Device state
-  List<DiscoveredDevice> discoveredDevices = [];
-  Set<DiscoveredDevice> connectingDevices = {};
-  Set<Wearable> connectedDevices = {};
+  List<Map<String, dynamic>> _discoveredDevices = [];
+  Set<String> _connectingDeviceIds = {};
+  Set<Map<String, dynamic>> _connectedDevices = {};
 
-  final List<void Function(Wearable)> _onConnectCallbacks = [];
+  // Stream subscriptions
+  StreamSubscription? _devicesSubscription;
+  StreamSubscription? _heartRateSubscription;
 
   // For the heart rate stream
-  final Map<String, _HeartRateEntry> _heartRateMap = {};
-  Timer? _heartRateResetTimer;
   final StreamController<int?> _heartRateStreamController =
       StreamController<int?>.broadcast();
 
+  // Getters for UI
+  List<Map<String, dynamic>> get discoveredDevices => _discoveredDevices;
+  Set<Map<String, dynamic>> get connectedDevices => _connectedDevices;
+  bool get hasConnectingDevices => _connectingDeviceIds.isNotEmpty;
   Stream<int?> get heartRateStream => _heartRateStreamController.stream;
 
   // Lock state for auto-reconnect functionality
   bool _isLocked = false;
-
   bool get isLocked => _isLocked;
 
   void setLock(bool value) {
@@ -38,115 +39,74 @@ class ConnectedDeviceController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Register a callback to be called when a device connects.
-  void registerOnConnectCallback(void Function(Wearable) callback) {
-    _onConnectCallbacks.add(callback);
-  }
-
-  void _updateHeartRate(String wearableId, int? heartRate) {
-    final now = DateTime.now();
-    if (heartRate == null) {
-      _heartRateMap.remove(wearableId);
-    } else {
-      _heartRateMap[wearableId] = _HeartRateEntry(heartRate, now);
-    }
-
-    // Remove entries older than 2 seconds
-    final threshold = DateTime.now().subtract(const Duration(seconds: 2));
-    _heartRateMap
-        .removeWhere((id, entry) => entry.timestamp.isBefore(threshold));
-
-    if (_heartRateMap.isEmpty) {
-      _heartRateStreamController.add(null);
-    } else {
-      final maxEntry = _heartRateMap.entries
-          .reduce((a, b) => a.value.heartRate >= b.value.heartRate ? a : b);
-      _heartRateStreamController.add(maxEntry.value.heartRate);
-    }
-
-    // Reset the 3-second timer that sends null if no new heart rate is received
-    _heartRateResetTimer?.cancel();
-    _heartRateResetTimer = Timer(const Duration(seconds: 3), () {
-      _heartRateStreamController.add(null);
-    });
-  }
-
   ConnectedDeviceController({required SettingsController settingsController}) {
     _settingsController = settingsController;
 
     _settingsController.addListener(_onSettingsChanged);
-
-    // Listen for new connected devices
-    _wearableManager.connectStream.listen((wearable) {
-      wearable.addDisconnectListener(() {
-        if (connectedDevices
-            .any((device) => device.deviceId == wearable.deviceId)) {
-          connectedDevices
-              .removeWhere((device) => device.deviceId == wearable.deviceId);
-          notifyListeners();
-        }
-      });
-
-      // Enable every sensor
-      if (wearable is SensorManager) {
-        for (Sensor sensor in (wearable as SensorManager).sensors) {
-          // Enable heart rate and HRV sensors
-          if (sensor is HeartRateSensor ||
-              sensor is HeartRateVariabilitySensor) {
-            for (SensorConfiguration config in sensor.relatedConfigurations) {
-              if (config is SensorFrequencyConfiguration) {
-                config.setMaximumFrequency();
-              }
-            }
-          }
-
-          // Listen for heart rate updates
-          if (sensor is HeartRateSensor) {
-            StreamSubscription hrs = sensor.sensorStream.listen((heartRate) {
-              _updateHeartRate(wearable.deviceId, heartRate.heartRateBpm);
-            });
-            wearable.addDisconnectListener(() {
-              hrs.cancel();
-            });
-          }
-        }
-      }
-
-      connectingDevices.removeWhere((d) => d.id == wearable.deviceId);
-      connectedDevices.add(wearable);
-      notifyListeners();
-
-      for (final callback in _onConnectCallbacks) {
-        callback(wearable);
-      }
+    
+    _initBackgroundService();
+  }
+  
+  Future<void> _initBackgroundService() async {
+    // Initialize and request permissions for the background service
+    await _backgroundService.initialize();
+    await _backgroundService.requestPermissions();
+    
+    // Subscribe to device state changes from the background service
+    _devicesSubscription = _backgroundService.connectedDevicesStream.listen(_handleDevicesUpdate);
+    
+    // Subscribe to heart rate updates from the background service
+    _heartRateSubscription = _backgroundService.heartRateStream.listen((heartRate) {
+      _heartRateStreamController.add(heartRate);
     });
-
-    // Listen for new connecting devices
-    _wearableManager.connectingStream.listen((device) {
-      connectingDevices.add(device);
-      notifyListeners();
-    });
-
+    
+    // Start the background service if not already running
+    if (await _backgroundService.isServiceRunning() == false) {
+      await _backgroundService.startService();
+    }
+    
+    // Initialize scanning
     startScanning();
+  }
+  
+  void _handleDevicesUpdate(List<Map<String, dynamic>> devices) {
+    _connectedDevices.clear();
+    _connectedDevices.addAll(devices.toSet());
+    
+    // Update connecting devices set
+    _connectingDeviceIds.removeWhere((id) => 
+      _connectedDevices.any((device) => device['id'] == id));
+    
+    notifyListeners();
+    
+    // Auto-connect functionality
+    if (_settingsController.autoConnectDevices != null && !_isLocked) {
+      persistConnectedDevicesForAutoConnect();
+    }
   }
 
   void _onSettingsChanged() {
-    _wearableManager.setAutoConnect(
-      _settingsController.autoConnectDevices
-              ?.map((device) => device.id)
-              .toList() ??
-          [],
-    );
+    // Send auto-connect devices to background service
+    if (_settingsController.autoConnectDevices != null) {
+      final deviceIds = _settingsController.autoConnectDevices
+          ?.map((device) => device.id)
+          .toList() ?? [];
+          
+      // This will be handled by the background service
+      _backgroundService.sendCommand('setAutoConnectDevices', {
+        'deviceIds': deviceIds,
+      });
+    }
   }
 
   /// Persist the list of connected devices for auto-connect functionality.
   void persistConnectedDevicesForAutoConnect() {
     _settingsController.setAutoConnectDevices(
-      connectedDevices
+      _connectedDevices
           .map(
             (device) => AutoConnectDevice(
-              id: device.deviceId,
-              name: device.name,
+              id: device['id'] as String,
+              name: device['name'] as String,
             ),
           )
           .toList(),
@@ -155,44 +115,36 @@ class ConnectedDeviceController extends ChangeNotifier {
 
   /// Start scanning and update the list of discovered devices.
   void startScanning() {
-    discoveredDevices.clear();
-
-    _scanSubscription?.cancel();
-    _wearableManager.startScan(excludeUnsupported: true);
-    _scanSubscription = _wearableManager.scanStream.listen((incomingDevice) {
-      if (incomingDevice.name.isNotEmpty &&
-          !discoveredDevices.any((device) => device.id == incomingDevice.id)) {
-        discoveredDevices.add(incomingDevice);
-        notifyListeners();
-      }
-    });
-
+    _discoveredDevices.clear();
+    _backgroundService.startScanning();
     notifyListeners();
   }
 
   /// Connect to a device.
-  Future<void> connectToDevice(DiscoveredDevice device) async {
-    if (connectedDevices.firstWhereOrNull((d) => d.deviceId == device.id) !=
-        null) {
+  Future<void> connectToDevice(Map<String, dynamic> device) async {
+    if (_connectedDevices.any((d) => d['id'] == device['id'])) {
       return;
     }
-
-    await _wearableManager.connectToDevice(device);
+    
+    // Add to connecting devices set
+    _connectingDeviceIds.add(device['id'] as String);
+    notifyListeners();
+    
+    // Send command to background service
+    _backgroundService.connectToDevice(
+      device['id'] as String,
+      device['name'] as String,
+    );
   }
 
   @override
   void dispose() {
     _settingsController.removeListener(_onSettingsChanged);
-    _scanSubscription?.cancel();
-    _heartRateResetTimer?.cancel();
+    _devicesSubscription?.cancel();
+    _heartRateSubscription?.cancel();
     _heartRateStreamController.close();
     super.dispose();
   }
 }
 
-class _HeartRateEntry {
-  final int heartRate;
-  final DateTime timestamp;
 
-  _HeartRateEntry(this.heartRate, this.timestamp);
-}
