@@ -30,7 +30,7 @@ class WearableInfoListWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
               child: WearableInfoWidget(
-                key: Key(device.deviceId),
+                key: Key(device['deviceId']),
                 wearable: device,
               ),
             ),

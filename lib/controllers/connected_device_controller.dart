@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import '../models/auto_connect_device.dart';
 import 'settings_controller.dart';
 
 class ConnectedDeviceController extends ChangeNotifier {
   final SettingsController settingsController;
 
-  List<dynamic> discoveredDevices = [];
-  Set<dynamic> connectingDevices = {};
-  Set<dynamic> connectedDevices = {};
+  List<Map<String, dynamic>> discoveredDevices = [];
+  Set<Map<String, dynamic>> connectingDevices = {};
+  Set<Map<String, dynamic>> connectedDevices = {};
+
+  // For heart rate updates (for UI compatibility)
+  final StreamController<int?> _heartRateStreamController = StreamController<int?>.broadcast();
+  Stream<int?> get heartRateStream => _heartRateStreamController.stream;
 
   bool _isLocked = false;
   bool get isLocked => _isLocked;
@@ -24,91 +27,26 @@ class ConnectedDeviceController extends ChangeNotifier {
   }
 
   void _onReceiveTaskData(Object? data) {
-    // Expecting: {type: 'deviceStatus', data: {...}}
     if (data is Map && data['type'] == 'deviceStatus') {
       final status = data['data'] as Map;
-      discoveredDevices = status['discoveredDevices'] ?? [];
-      connectingDevices = Set.from(status['connectingDevices'] ?? []);
-      connectedDevices = Set.from(status['connectedDevices'] ?? []);
+      discoveredDevices = List<Map<String, dynamic>>.from(status['discoveredDevices'] ?? []);
+      connectingDevices = Set<Map<String, dynamic>>.from(status['connectingDevices'] ?? []);
+      connectedDevices = Set<Map<String, dynamic>>.from(status['connectedDevices'] ?? []);
+      if (status.containsKey('heartRate')) {
+        _heartRateStreamController.add(status['heartRate']);
+      }
       notifyListeners();
     }
   }
 
-  Future<void> startScanning() async {
-    await FlutterForegroundTask.sendDataToTask({'type': 'startScanning'});
-  }
-
-  Future<void> connectToDevice(dynamic device) async {
-    await FlutterForegroundTask.sendDataToTask({
-      'type': 'connectDevice',
-      'params': device,
-    });
-  }
-}
-
-  void _onSettingsChanged() {
-    _wearableManager.setAutoConnect(
-      _settingsController.autoConnectDevices
-              ?.map((device) => device.id)
-              .toList() ??
-          [],
-    );
-  }
-
-  /// Persist the list of connected devices for auto-connect functionality.
-  void persistConnectedDevicesForAutoConnect() {
-    _settingsController.setAutoConnectDevices(
-      connectedDevices
-          .map(
-            (device) => AutoConnectDevice(
-              id: device.deviceId,
-              name: device.name,
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  /// Start scanning and update the list of discovered devices.
   void startScanning() {
-    discoveredDevices.clear();
-
-    _scanSubscription?.cancel();
-    _wearableManager.startScan(excludeUnsupported: true);
-    _scanSubscription = _wearableManager.scanStream.listen((incomingDevice) {
-      if (incomingDevice.name.isNotEmpty &&
-          !discoveredDevices.any((device) => device.id == incomingDevice.id)) {
-        discoveredDevices.add(incomingDevice);
-        notifyListeners();
-      }
-    });
-
-    notifyListeners();
+    FlutterForegroundTask.sendDataToTask({'type': 'startScanning'});
   }
 
-  /// Connect to a device.
-  Future<void> connectToDevice(DiscoveredDevice device) async {
-    if (connectedDevices.firstWhereOrNull((d) => d.deviceId == device.id) !=
-        null) {
-      return;
-    }
-
-    await _wearableManager.connectToDevice(device);
+  void connectToDevice(Map<String, dynamic> device) {
+    FlutterForegroundTask.sendDataToTask({'type': 'connectDevice', 'params': device});
   }
 
-  @override
-  void dispose() {
-    _settingsController.removeListener(_onSettingsChanged);
-    _scanSubscription?.cancel();
-    _heartRateResetTimer?.cancel();
-    _heartRateStreamController.close();
-    super.dispose();
-  }
-}
-
-class _HeartRateEntry {
-  final int heartRate;
-  final DateTime timestamp;
-
-  _HeartRateEntry(this.heartRate, this.timestamp);
+  // Stub for UI compatibility
+  void persistConnectedDevicesForAutoConnect() {}
 }

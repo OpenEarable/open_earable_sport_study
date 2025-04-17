@@ -4,7 +4,7 @@ import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'grouped_box.dart';
 
 class WearableInfoWidget extends StatefulWidget {
-  final Wearable wearable;
+  final Map<String, dynamic> wearable;
 
   const WearableInfoWidget({
     Key? key,
@@ -16,50 +16,18 @@ class WearableInfoWidget extends StatefulWidget {
 }
 
 class _WearableInfoWidgetState extends State<WearableInfoWidget> {
-  HeartRateSensor? heartRateSensor;
-  HeartRateVariabilitySensor? heartRateVariabilitySensor;
-
   @override
   void initState() {
     super.initState();
-    // Search heart rate sensor
-    if (widget.wearable is SensorManager) {
-      for (var sensor in (widget.wearable as SensorManager).sensors) {
-        if (sensor is HeartRateSensor) {
-          heartRateSensor = sensor;
-        }
-        if (sensor is HeartRateVariabilitySensor) {
-          heartRateVariabilitySensor = sensor;
-        }
-      }
-    }
-
-    // Enable heart rate sensor if needed
-    if (heartRateSensor != null) {
-      for (final relatedConfig in heartRateSensor!.relatedConfigurations) {
-        if (relatedConfig is SensorFrequencyConfiguration) {
-          relatedConfig.setMaximumFrequency();
-        }
-      }
-    }
-
-    // Enable heart rate variability sensor if needed
-    if (heartRateVariabilitySensor != null) {
-      for (final relatedConfig
-          in heartRateVariabilitySensor!.relatedConfigurations) {
-        if (relatedConfig is SensorFrequencyConfiguration) {
-          relatedConfig.setMaximumFrequency();
-        }
-      }
-    }
+    // No-op: advanced sensor features are not available for map-based devices.
   }
 
   @override
   Widget build(BuildContext context) {
-    final wearableIconPath = widget.wearable.getWearableIconPath();
+    final wearableIconPath = widget.wearable['iconPath'];
 
     return GroupedBox(
-      title: widget.wearable.name,
+      title: widget.wearable['name'] ?? '',
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -75,78 +43,11 @@ class _WearableInfoWidgetState extends State<WearableInfoWidget> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.wearable is BatteryLevelService)
-                StreamBuilder(
-                  stream: (widget.wearable as BatteryLevelService)
-                      .batteryPercentageStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(
-                        "Battery:\t${snapshot.data}%",
-                      );
-                    } else {
-                      return const Text(
-                        "Battery:\t###",
-                      );
-                    }
-                  },
-                ),
+              Text("Battery: N/A"),
               const SizedBox(height: 20),
-              if (heartRateSensor != null)
-                StreamBuilder(
-                  stream: heartRateSensor!.sensorStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(
-                        "Heart Rate:\t${snapshot.data!.heartRateBpm} bpm",
-                      );
-                    } else {
-                      return const Text(
-                        "Heart Rate:\t###",
-                      );
-                    }
-                  },
-                ),
-              if (heartRateSensor == null)
-                const Text(
-                  "Heart Rate:\tNot available",
-                ),
-              if (heartRateVariabilitySensor != null)
-                const SizedBox(height: 20),
-              if (heartRateVariabilitySensor != null)
-                const Text(
-                  "Heart Rate Variability",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (heartRateVariabilitySensor != null)
-                StreamBuilder(
-                  stream: heartRateVariabilitySensor!.sensorStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: List.generate(
-                            heartRateVariabilitySensor!.axisCount, (index) {
-                          return Text(
-                            '${heartRateVariabilitySensor!.axisNames[index]}:\t ${snapshot.data!.values[index].toStringAsFixed(2)}',
-                          );
-                        }),
-                      );
-                    } else {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: List.generate(
-                            heartRateVariabilitySensor!.axisCount, (index) {
-                          return Text(
-                            '${heartRateVariabilitySensor!.axisNames[index]}:\t ###',
-                          );
-                        }),
-                      );
-                    }
-                  },
-                ),
+              Text("Heart Rate: N/A"),
+              const SizedBox(height: 20),
+              Text("Heart Rate Variability: N/A"),
             ],
           ),
         ],

@@ -50,7 +50,7 @@ class RecordingController extends ChangeNotifier {
 
   Future<void> start() async {
     // Send command to background service
-    await FlutterForegroundTask.sendDataToTask({
+    FlutterForegroundTask.sendDataToTask({
       'type': 'startRecording',
       'params': {
         // Add any parameters needed, e.g. participantId
@@ -60,7 +60,7 @@ class RecordingController extends ChangeNotifier {
   }
 
   Future<void> stop() async {
-    await FlutterForegroundTask.sendDataToTask({'type': 'stopRecording'});
+    FlutterForegroundTask.sendDataToTask({'type': 'stopRecording'});
   }
 }
 

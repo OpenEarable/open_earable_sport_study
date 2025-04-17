@@ -24,7 +24,7 @@ class ScanView extends StatelessWidget {
     final autoConnectDevices = settingsController.autoConnectDevices ?? [];
     final autoConnectIds = autoConnectDevices.map((d) => d.id).toSet();
     final Map<String, dynamic> discoveredMap = {
-      for (var d in connectedDeviceController.discoveredDevices) d.id: d,
+      for (var d in connectedDeviceController.discoveredDevices) d['id']: d,
     };
 
     // Build auto connect devices section
@@ -55,7 +55,7 @@ class ScanView extends StatelessWidget {
     // Build remaining discovered devices section (those not matching any auto connect device)
     final remainingDiscoveredDevices = connectedDeviceController
         .discoveredDevices
-        .where((d) => !autoConnectIds.contains(d.id))
+        .where((d) => !autoConnectIds.contains(d['id']))
         .toList();
     for (int i = 0; i < remainingDiscoveredDevices.length; i++) {
       final device = remainingDiscoveredDevices[i];
@@ -166,7 +166,7 @@ class _AutoConnectTile extends StatelessWidget {
 }
 
 class _InteractiveTile extends StatelessWidget {
-  final DiscoveredDevice device;
+  final Map<String, dynamic> device;
   final bool enableManualConnectionChange;
   final bool autoConnectDevice;
 
@@ -183,10 +183,10 @@ class _InteractiveTile extends StatelessWidget {
         Provider.of<ConnectedDeviceController>(context, listen: false);
     Widget trailing;
     if (connectedDeviceController.connectedDevices
-        .any((e) => e.deviceId == device.id)) {
+        .any((e) => e['deviceId'] == device['id'])) {
       trailing = const Icon(size: 24, Icons.check, color: Colors.green);
     } else if (connectedDeviceController.connectingDevices
-        .any((e) => e.id == device.id)) {
+        .any((e) => e['id'] == device['id'])) {
       trailing = const SizedBox(
         height: 24,
         width: 24,
@@ -201,7 +201,7 @@ class _InteractiveTile extends StatelessWidget {
     return ListTile(
       textColor: enableManualConnectionChange ? Colors.black : Colors.black54,
       selectedTileColor: Colors.grey,
-      title: Text(device.name),
+      title: Text(device['name'] ?? ''),
       titleTextStyle: const TextStyle(fontSize: 16),
       visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
       trailing: trailing,

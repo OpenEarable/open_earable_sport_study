@@ -42,4 +42,15 @@ class BackgroundServiceTaskHandler extends TaskHandler {
   void sendUpdateToUI(String type, dynamic data) {
     FlutterForegroundTask.sendDataToMain({'type': type, 'data': data});
   }
+
+  @override
+  Future<void> onDestroy(DateTime timestamp) {
+    // TODO: implement onDestroy
+    throw UnimplementedError();
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    // TODO: implement onRepeatEvent
+  }
 }
