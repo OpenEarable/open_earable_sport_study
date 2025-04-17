@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:open_earable_flutter/open_earable_flutter.dart';
+
 import 'grouped_box.dart';
 
 class WearableInfoWidget extends StatefulWidget {
@@ -42,7 +42,7 @@ class _WearableInfoWidgetState extends State<WearableInfoWidget> {
           if (wearableIconPath != null) const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: const [
               Text("Battery: N/A"),
               const SizedBox(height: 20),
               Text("Heart Rate: N/A"),

@@ -10,7 +10,7 @@ class RecordingController extends ChangeNotifier {
 
   bool _isRecording = false;
   Duration _recordingDuration = Duration.zero;
-  Timer? _timer;
+
 
   bool get isRecording => _isRecording;
 
@@ -55,7 +55,7 @@ class RecordingController extends ChangeNotifier {
       'params': {
         // Add any parameters needed, e.g. participantId
         'participantId': settingsController.participantId,
-      }
+      },
     });
   }
 

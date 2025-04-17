@@ -16,6 +16,8 @@ class BackgroundServiceTaskHandler extends TaskHandler {
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     _recordingService = RecordingSubService();
     _deviceService = ConnectedDeviceSubService();
+    // Optionally, start scanning immediately
+    //_deviceService.startScanning();
   }
 
   @override
@@ -44,13 +46,15 @@ class BackgroundServiceTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp) {
-    // TODO: implement onDestroy
-    throw UnimplementedError();
+  Future<void> onDestroy(DateTime timestamp) async {
+    // Clean up any resources or subscriptions
+    // (Assumes sub-services handle their own cleanup if needed)
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    // TODO: implement onRepeatEvent
+    // Periodically send device status to UI
+    _deviceService.sendDeviceStatusUpdate();
+    // RecordingSubService already sends periodic updates via timer
   }
 }
