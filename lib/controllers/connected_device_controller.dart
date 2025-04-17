@@ -73,7 +73,7 @@ class ConnectedDeviceController extends ChangeNotifier {
     
     // Update connecting devices set
     _connectingDeviceIds.removeWhere((id) => 
-      _connectedDevices.any((device) => device['id'] == id));
+      _connectedDevices.any((device) => device['id'] == id),);
     
     notifyListeners();
     
@@ -144,4 +144,6 @@ class ConnectedDeviceController extends ChangeNotifier {
     super.dispose();
   }
 }
+
+
 

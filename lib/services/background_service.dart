@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:isolate';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:open_earable_sport_study/services/sub_services/connected_devices_service.dart';
 import 'package:open_earable_sport_study/services/sub_services/recording_service.dart';
@@ -52,7 +51,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.sendDataToMain({
         'type': 'heartRate',
         'value': heartRate,
-      });
+      },);
     });
     
     _connectedDevicesService.onDevicesChanged.listen((devices) {
@@ -67,7 +66,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.sendDataToMain({
         'type': 'connectedDevices',
         'devices': devicesList,
-      });
+      },);
     });
     
     _recordingService.onStateChanged.listen((state) {
@@ -76,7 +75,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.sendDataToMain({
         'type': 'recordingState',
         'state': state,
-      });
+      },);
     });
   }
   
@@ -183,8 +182,9 @@ class BackgroundServiceManager {
     // Initialize port for communication between TaskHandler and UI
     FlutterForegroundTask.initCommunicationPort();
     
-    // Set callback to receive data from background service
-    FlutterForegroundTask.setReceiveDataCallback(_handleBackgroundData);
+    // Set listener to receive data from background service
+    FlutterForegroundTask.setTaskHandler(OpenEarableBackgroundTaskHandler());
+    FlutterForegroundTask.receivePort?.listen(_handleBackgroundData);
     
     _isInitialized = true;
   }
@@ -228,7 +228,7 @@ class BackgroundServiceManager {
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
+      foregroundTaskOptions: ForegroundTaskOptions(
         eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: true,
@@ -245,20 +245,29 @@ class BackgroundServiceManager {
     // Initialize service
     initForegroundService();
     
-    // Start service
-    final result = await FlutterForegroundTask.startService(
-      notificationTitle: 'OpenEarable Sport Study',
-      notificationText: 'Service is running',
-      callback: startCallback,
-    );
-    
-    return result;
+    try {
+      // Start service
+      await FlutterForegroundTask.startService(
+        notificationTitle: 'OpenEarable Sport Study',
+        notificationText: 'Service is running',
+        callback: startCallback,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Error starting foreground service: $e');
+      return false;
+    }
   }
   
   /// Stop the foreground service
   Future<bool> stopService() async {
-    final result = await FlutterForegroundTask.stopService();
-    return result;
+    try {
+      await FlutterForegroundTask.stopService();
+      return true;
+    } catch (e) {
+      debugPrint('Error stopping foreground service: $e');
+      return false;
+    }
   }
   
   /// Check if the foreground service is running

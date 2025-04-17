@@ -45,7 +45,8 @@ class ConnectedDevicesService {
     // Listen for new connecting devices
     _wearableManager.connectingStream.listen((device) {
       _connectingDevices.add(device);
-    },);
+      _discoveredDevicesController.add(_discoveredDevices);
+    });
   }
 
   void _onDeviceConnected(Wearable wearable) {
@@ -154,6 +155,7 @@ class ConnectedDevicesService {
     _heartRateStreamController.close();
   }
 }
+
 
 class _HeartRateEntry {
   final int heartRate;
