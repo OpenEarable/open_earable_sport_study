@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:open_earable_flutter/open_earable_flutter.dart';
 
 import '../models/auto_connect_device.dart';
 import '../services/background_service.dart';
@@ -12,9 +10,9 @@ class ConnectedDeviceController extends ChangeNotifier {
   final BackgroundServiceManager _backgroundService = BackgroundServiceManager.instance;
 
   // Device state
-  List<Map<String, dynamic>> _discoveredDevices = [];
-  Set<String> _connectingDeviceIds = {};
-  Set<Map<String, dynamic>> _connectedDevices = {};
+  final List<Map<String, dynamic>> _discoveredDevices = [];
+  final Set<String> _connectingDeviceIds = {};
+  final Set<Map<String, dynamic>> _connectedDevices = {};
 
   // Stream subscriptions
   StreamSubscription? _devicesSubscription;
@@ -56,9 +54,9 @@ class ConnectedDeviceController extends ChangeNotifier {
     _devicesSubscription = _backgroundService.connectedDevicesStream.listen(_handleDevicesUpdate);
     
     // Subscribe to heart rate updates from the background service
-    _heartRateSubscription = _backgroundService.heartRateStream.listen((heartRate) {
-      _heartRateStreamController.add(heartRate);
-    });
+    _heartRateSubscription = _backgroundService.heartRateStream.listen(
+      _heartRateStreamController.add,
+    );
     
     // Start the background service if not already running
     if (await _backgroundService.isServiceRunning() == false) {
@@ -95,7 +93,7 @@ class ConnectedDeviceController extends ChangeNotifier {
       // This will be handled by the background service
       _backgroundService.sendCommand('setAutoConnectDevices', {
         'deviceIds': deviceIds,
-      });
+      },);
     }
   }
 
@@ -146,5 +144,6 @@ class ConnectedDeviceController extends ChangeNotifier {
     super.dispose();
   }
 }
+
 
 

@@ -4,11 +4,11 @@ import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'grouped_box.dart';
 
 class WearableInfoWidget extends StatefulWidget {
-  final Wearable wearable;
+  final Map<String, dynamic> deviceInfo;
 
   const WearableInfoWidget({
     Key? key,
-    required this.wearable,
+    required this.deviceInfo,
   }) : super(key: key);
 
   @override
@@ -22,131 +22,51 @@ class _WearableInfoWidgetState extends State<WearableInfoWidget> {
   @override
   void initState() {
     super.initState();
-    // Search heart rate sensor
-    if (widget.wearable is SensorManager) {
-      for (var sensor in (widget.wearable as SensorManager).sensors) {
-        if (sensor is HeartRateSensor) {
-          heartRateSensor = sensor;
-        }
-        if (sensor is HeartRateVariabilitySensor) {
-          heartRateVariabilitySensor = sensor;
-        }
-      }
-    }
-
-    // Enable heart rate sensor if needed
-    if (heartRateSensor != null) {
-      for (final relatedConfig in heartRateSensor!.relatedConfigurations) {
-        if (relatedConfig is SensorFrequencyConfiguration) {
-          relatedConfig.setMaximumFrequency();
-        }
-      }
-    }
-
-    // Enable heart rate variability sensor if needed
-    if (heartRateVariabilitySensor != null) {
-      for (final relatedConfig
-          in heartRateVariabilitySensor!.relatedConfigurations) {
-        if (relatedConfig is SensorFrequencyConfiguration) {
-          relatedConfig.setMaximumFrequency();
-        }
-      }
-    }
+    // Note: Sensor management is now handled by the background service
+    // No need to initialize sensors here
   }
 
   @override
   Widget build(BuildContext context) {
-    final wearableIconPath = widget.wearable.getWearableIconPath();
+    // We no longer have access to the wearable icon path method
+    // Can use a default icon instead
+    final wearableIconPath = 'assets/images/wearable_default.svg';
 
     return GroupedBox(
-      title: widget.wearable.name,
+      title: widget.deviceInfo['name'] as String,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (wearableIconPath != null)
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: SvgPicture.asset(
-                wearableIconPath,
-              ),
+          // Use a placeholder icon since we can't access the actual wearable icon
+          SizedBox(
+            width: 80,
+            height: 80,
+            child: Icon(
+              Icons.watch,
+              size: 64,
+              color: Theme.of(context).primaryColor,
             ),
-          if (wearableIconPath != null) const SizedBox(width: 10),
+          ),
+          const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.wearable is BatteryLevelService)
-                StreamBuilder(
-                  stream: (widget.wearable as BatteryLevelService)
-                      .batteryPercentageStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(
-                        "Battery:\t${snapshot.data}%",
-                      );
-                    } else {
-                      return const Text(
-                        "Battery:\t###",
-                      );
-                    }
-                  },
-                ),
+              // We don't have direct access to the device features anymore
+              // Show some basic information from the device info
+              Text(
+                "Device ID: ${widget.deviceInfo['id']}",
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Type: ${widget.deviceInfo['type'] ?? 'Unknown'}",
+              ),
               const SizedBox(height: 20),
-              if (heartRateSensor != null)
-                StreamBuilder(
-                  stream: heartRateSensor!.sensorStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Text(
-                        "Heart Rate:\t${snapshot.data!.heartRateBpm} bpm",
-                      );
-                    } else {
-                      return const Text(
-                        "Heart Rate:\t###",
-                      );
-                    }
-                  },
-                ),
-              if (heartRateSensor == null)
-                const Text(
-                  "Heart Rate:\tNot available",
-                ),
-              if (heartRateVariabilitySensor != null)
-                const SizedBox(height: 20),
-              if (heartRateVariabilitySensor != null)
-                const Text(
-                  "Heart Rate Variability",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (heartRateVariabilitySensor != null)
-                StreamBuilder(
-                  stream: heartRateVariabilitySensor!.sensorStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: List.generate(
-                            heartRateVariabilitySensor!.axisCount, (index) {
-                          return Text(
-                            '${heartRateVariabilitySensor!.axisNames[index]}:\t ${snapshot.data!.values[index].toStringAsFixed(2)}',
-                          );
-                        }),
-                      );
-                    } else {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: List.generate(
-                            heartRateVariabilitySensor!.axisCount, (index) {
-                          return Text(
-                            '${heartRateVariabilitySensor!.axisNames[index]}:\t ###',
-                          );
-                        }),
-                      );
-                    }
-                  },
-                ),
+              // Heart rate information now comes from the controller
+              // instead of directly from the device
+              const Text(
+                "Heart Rate: See status bar for real-time updates",
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
             ],
           ),
         ],

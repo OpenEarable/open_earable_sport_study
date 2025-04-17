@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:open_earable_sport_study/services/background_service.dart';
-import 'package:open_earable_sport_study/services/sub_services/recording_service.dart';
 import 'connected_device_controller.dart';
 import 'settings_controller.dart';
 
@@ -52,7 +51,13 @@ class RecordingController extends ChangeNotifier {
     
     // Check if there's a last recording
     if (state.containsKey('lastRecording') && state['lastRecording'] != null) {
-      _lastRecording = LastRecording.fromMap(state['lastRecording'] as Map<String, dynamic>);
+      final map = state['lastRecording'] as Map<String, dynamic>;
+      _lastRecording = LastRecording(
+        participantId: map['participantId'] as String,
+        duration: Duration(seconds: map['duration'] as int),
+        startHeartRate: map['startHeartRate'] as int?,
+        exerciseHeartRate: map['exerciseHeartRate'] as int?,
+      );
     }
     
     notifyListeners();

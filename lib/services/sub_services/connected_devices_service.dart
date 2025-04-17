@@ -10,9 +10,9 @@ class ConnectedDevicesService {
   StreamSubscription? _scanSubscription;
 
   // Device state
-  List<DiscoveredDevice> _discoveredDevices = [];
-  Set<DiscoveredDevice> _connectingDevices = {};
-  Set<Wearable> _connectedDevices = {};
+  final List<DiscoveredDevice> _discoveredDevices = [];
+  final Set<DiscoveredDevice> _connectingDevices = {};
+  final Set<Wearable> _connectedDevices = {};
 
   // Stream controllers
   final StreamController<List<DiscoveredDevice>> _discoveredDevicesController = 
@@ -40,9 +40,7 @@ class ConnectedDevicesService {
 
   void _initialize() {
     // Listen for new connected devices
-    _wearableManager.connectStream.listen((wearable) {
-      _onDeviceConnected(wearable);
-    });
+    _wearableManager.connectStream.listen(_onDeviceConnected);
 
     // Listen for new connecting devices
     _wearableManager.connectingStream.listen((device) {

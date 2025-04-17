@@ -15,11 +15,11 @@ void startCallback() {
 
 /// Main handler for the background service
 class OpenEarableBackgroundTaskHandler extends TaskHandler {
-  static const String CMD_START_RECORDING = 'startRecording';
-  static const String CMD_STOP_RECORDING = 'stopRecording';
-  static const String CMD_SCAN_DEVICES = 'scanDevices';
-  static const String CMD_CONNECT_DEVICE = 'connectDevice';
-  static const String CMD_SET_PARTICIPANT_ID = 'setParticipantId';
+  static const String cmdStartRecording = 'startRecording';
+  static const String cmdStopRecording = 'stopRecording';
+  static const String cmdScanDevices = 'scanDevices';
+  static const String cmdConnectDevice = 'connectDevice';
+  static const String cmdSetParticipantId = 'setParticipantId';
   
   // Sub-services
   late ConnectedDevicesService _connectedDevicesService;
@@ -66,7 +66,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.sendDataToMain({
         'type': 'connectedDevices',
         'devices': devicesList,
-      });
+      },);
     });
     
     _recordingService.onStateChanged.listen((state) {
@@ -103,7 +103,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
   }
   
   @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+  Future<void> onDestroy(DateTime timestamp) async {
     // Cleanup resources
     _heartRateStreamController.close();
     _connectedDevicesStreamController.close();
@@ -183,13 +183,15 @@ class BackgroundServiceManager {
     FlutterForegroundTask.initCommunicationPort();
     
     // Set callback to receive data from background service
-    FlutterForegroundTask.addDataCallback((data) {
-      if (data is Map<String, dynamic>) {
-        _dataFromServiceController.add(data);
-      }
-    });
+    FlutterForegroundTask.eventChannel.setListener(_handleBackgroundData);
     
     _isInitialized = true;
+  }
+  
+  void _handleBackgroundData(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      _dataFromServiceController.add(data);
+    }
   }
   
   /// Request necessary permissions for the background service
@@ -220,19 +222,15 @@ class BackgroundServiceManager {
         channelId: 'open_earable_sport_study',
         channelName: 'OpenEarable Sport Study',
         channelDescription: 'Background service for OpenEarable Sport Study app',
-        iconData: const NotificationIconData(
-          resType: ResourceType.mipmap,
-          resPrefix: ResourcePrefix.ic,
-          name: 'launcher',
-        ),
-        buttons: [],
+        importance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(const Duration(seconds: 1)),
+        eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: true,
         allowWifiLock: true,
@@ -256,13 +254,13 @@ class BackgroundServiceManager {
       callback: startCallback,
     );
     
-    return result == ServiceRequestResult.success;
+    return result == ServiceRequestResult.SUCCESS;
   }
   
   /// Stop the foreground service
   Future<bool> stopService() async {
     final result = await FlutterForegroundTask.stopService();
-    return result == ServiceRequestResult.success;
+    return result == ServiceRequestResult.SUCCESS;
   }
   
   /// Check if the foreground service is running
@@ -280,32 +278,32 @@ class BackgroundServiceManager {
   
   /// Start recording in the background service
   void startRecording() {
-    sendCommand(OpenEarableBackgroundTaskHandler.CMD_START_RECORDING);
+    sendCommand(OpenEarableBackgroundTaskHandler.cmdStartRecording);
   }
-  
+
   /// Stop recording in the background service
   void stopRecording() {
-    sendCommand(OpenEarableBackgroundTaskHandler.CMD_STOP_RECORDING);
+    sendCommand(OpenEarableBackgroundTaskHandler.cmdStopRecording);
   }
-  
+
   /// Start scanning for devices in the background service
   void startScanning() {
-    sendCommand(OpenEarableBackgroundTaskHandler.CMD_SCAN_DEVICES);
+    sendCommand(OpenEarableBackgroundTaskHandler.cmdScanDevices);
   }
-  
+
   /// Connect to a device in the background service
   void connectToDevice(String deviceId, String deviceName) {
-    sendCommand(OpenEarableBackgroundTaskHandler.CMD_CONNECT_DEVICE, {
+    sendCommand(OpenEarableBackgroundTaskHandler.cmdConnectDevice, {
       'deviceId': deviceId,
       'deviceName': deviceName,
-    });
+    },);
   }
-  
+
   /// Set participant ID in the background service
   void setParticipantId(String participantId) {
-    sendCommand(OpenEarableBackgroundTaskHandler.CMD_SET_PARTICIPANT_ID, {
+    sendCommand(OpenEarableBackgroundTaskHandler.cmdSetParticipantId, {
       'participantId': participantId,
-    });
+    },);
   }
   
   /// Dispose the background service manager
