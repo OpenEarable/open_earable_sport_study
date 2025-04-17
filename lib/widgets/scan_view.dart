@@ -87,6 +87,12 @@ class ScanView extends StatelessWidget {
     final connectedDeviceController =
         Provider.of<ConnectedDeviceController>(context);
     final settingsController = Provider.of<SettingsController>(context);
+    
+    // Debug log discovered devices
+    print('ScanView: Building with ${connectedDeviceController.discoveredDevices.length} discovered devices');
+    for (var device in connectedDeviceController.discoveredDevices) {
+      print('ScanView:   Device: ${device['name']} (${device['id']})');
+    }
 
     return Column(
       children: [

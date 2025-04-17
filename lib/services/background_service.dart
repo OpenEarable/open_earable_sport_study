@@ -170,6 +170,10 @@ class BackgroundServiceManager {
   Stream<List<Map<String, dynamic>>> get connectedDevicesStream => dataFromService
       .where((data) => data['type'] == 'connectedDevices')
       .map((data) => (data['devices'] as List<dynamic>).cast<Map<String, dynamic>>());
+      
+  Stream<List<Map<String, dynamic>>> get discoveredDevicesStream => dataFromService
+      .where((data) => data['type'] == 'discoveredDevices')
+      .map((data) => (data['devices'] as List<dynamic>).cast<Map<String, dynamic>>());
   
   Stream<Map<String, dynamic>> get recordingStateStream => dataFromService
       .where((data) => data['type'] == 'recordingState')
@@ -179,19 +183,33 @@ class BackgroundServiceManager {
   Future<void> initialize() async {
     if (_isInitialized) return;
     
+    print('BackgroundServiceManager: Initializing...');
+    
     // Initialize port for communication between TaskHandler and UI
     FlutterForegroundTask.initCommunicationPort();
     
-    // Set listener to receive data from background service
-    FlutterForegroundTask.setTaskHandler(OpenEarableBackgroundTaskHandler());
-    FlutterForegroundTask.receivePort?.listen(_handleBackgroundData);
+    // Configure listener to receive data from background service
+    final receivePort = FlutterForegroundTask.receivePort;
+    if (receivePort != null) {
+      print('BackgroundServiceManager: ReceivePort is available, setting up listener');
+      receivePort.listen(_handleBackgroundData);
+    } else {
+      print('BackgroundServiceManager: ReceivePort is null! Communication will not work');
+    }
     
     _isInitialized = true;
   }
   
   void _handleBackgroundData(dynamic data) {
+    print('BackgroundServiceManager: Received data from background: $data');
     if (data is Map<String, dynamic>) {
       _dataFromServiceController.add(data);
+      
+      // Debug specific event types
+      if (data['type'] == 'discoveredDevices') {
+        final devices = data['devices'] as List<dynamic>;
+        print('BackgroundServiceManager: Received ${devices.length} discovered devices');
+      }
     }
   }
   
@@ -242,19 +260,26 @@ class BackgroundServiceManager {
       await initialize();
     }
     
-    // Initialize service
-    initForegroundService();
-    
+    print('BackgroundServiceManager: Starting service...');
     try {
+      // First make sure we initialize the task handler
+      print('BackgroundServiceManager: Setting up task handler');
+      FlutterForegroundTask.setTaskHandler(OpenEarableBackgroundTaskHandler());
+      
+      // Initialize the foreground service
+      initForegroundService();
+      
       // Start service
+      print('BackgroundServiceManager: Calling startService');
       await FlutterForegroundTask.startService(
         notificationTitle: 'OpenEarable Sport Study',
         notificationText: 'Service is running',
         callback: startCallback,
       );
+      print('BackgroundServiceManager: Service started successfully');
       return true;
     } catch (e) {
-      debugPrint('Error starting foreground service: $e');
+      print('BackgroundServiceManager: Error starting foreground service: $e');
       return false;
     }
   }

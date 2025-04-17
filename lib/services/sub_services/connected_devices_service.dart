@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 
 /// Service to manage wearable devices in the background isolate
@@ -116,6 +117,9 @@ class ConnectedDevicesService {
   /// Start scanning for new devices
   void startScanning() {
     _discoveredDevices.clear();
+    
+    // Send initial empty list to main app
+    _sendDiscoveredDevicesToMain();
 
     _scanSubscription?.cancel();
     _wearableManager.startScan(excludeUnsupported: true);
@@ -124,6 +128,9 @@ class ConnectedDevicesService {
           !_discoveredDevices.any((device) => device.id == incomingDevice.id)) {
         _discoveredDevices.add(incomingDevice);
         _discoveredDevicesController.add(_discoveredDevices);
+        
+        // Send updated list to main app
+        _sendDiscoveredDevicesToMain();
       }
     });
   }
@@ -154,8 +161,29 @@ class ConnectedDevicesService {
     _connectedDevicesController.close();
     _heartRateStreamController.close();
   }
-}
 
+  void _sendDiscoveredDevicesToMain() {
+    final devicesList = _discoveredDevices.map((device) => {
+      'id': device.id,
+      'name': device.name,
+      'rssi': device.rssi,
+      'manufacturerData': device.manufacturerData,
+      'serviceUUIDs': device.serviceUuids,
+      'type': device.runtimeType.toString(),
+    }).toList();
+    
+    FlutterForegroundTask.sendDataToMain({
+      'type': 'discoveredDevices',
+      'devices': devicesList,
+    },);
+    
+    // Print debug info to help troubleshoot
+    print('Sending ${devicesList.length} discovered devices to main app');
+    for (var device in devicesList) {
+      print('  Device: ${device['name']} (${device['id']})');
+    }
+  }
+}
 
 class _HeartRateEntry {
   final int heartRate;
