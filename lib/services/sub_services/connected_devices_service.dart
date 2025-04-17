@@ -45,7 +45,7 @@ class ConnectedDevicesService {
     // Listen for new connecting devices
     _wearableManager.connectingStream.listen((device) {
       _connectingDevices.add(device);
-    });
+    },);
   }
 
   void _onDeviceConnected(Wearable wearable) {
@@ -114,7 +114,7 @@ class ConnectedDevicesService {
 
   /// Start scanning for new devices
   void startScanning() {
-    _discoveredDevices = [];
+    _discoveredDevices.clear();
 
     _scanSubscription?.cancel();
     _wearableManager.startScan(excludeUnsupported: true);

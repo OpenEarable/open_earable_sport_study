@@ -306,6 +306,7 @@ class RecordingService {
 }
 
 
+
 /// Recording metadata class for the UI
 class LastRecording {
   final String participantId;

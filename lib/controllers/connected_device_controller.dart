@@ -55,7 +55,7 @@ class ConnectedDeviceController extends ChangeNotifier {
     
     // Subscribe to heart rate updates from the background service
     _heartRateSubscription = _backgroundService.heartRateStream.listen(
-      _heartRateStreamController.add,
+      (value) => _heartRateStreamController.add(value as int?),
     );
     
     // Start the background service if not already running
@@ -144,6 +144,4 @@ class ConnectedDeviceController extends ChangeNotifier {
     super.dispose();
   }
 }
-
-
 

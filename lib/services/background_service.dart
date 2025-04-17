@@ -15,6 +15,7 @@ void startCallback() {
 
 /// Main handler for the background service
 class OpenEarableBackgroundTaskHandler extends TaskHandler {
+  // Command constants
   static const String cmdStartRecording = 'startRecording';
   static const String cmdStopRecording = 'stopRecording';
   static const String cmdScanDevices = 'scanDevices';
@@ -66,7 +67,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.sendDataToMain({
         'type': 'connectedDevices',
         'devices': devicesList,
-      },);
+      });
     });
     
     _recordingService.onStateChanged.listen((state) {
@@ -123,16 +124,16 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
     final params = data['params'] as Map<String, dynamic>?;
     
     switch (command) {
-      case CMD_START_RECORDING:
+      case cmdStartRecording:
         _recordingService.startRecording();
         break;
-      case CMD_STOP_RECORDING:
+      case cmdStopRecording:
         _recordingService.stopRecording();
         break;
-      case CMD_SCAN_DEVICES:
+      case cmdScanDevices:
         _connectedDevicesService.startScanning();
         break;
-      case CMD_CONNECT_DEVICE:
+      case cmdConnectDevice:
         if (params != null && params.containsKey('deviceId') && params.containsKey('deviceName')) {
           _connectedDevicesService.connectToDevice(
             params['deviceId'] as String,
@@ -140,7 +141,7 @@ class OpenEarableBackgroundTaskHandler extends TaskHandler {
           );
         }
         break;
-      case CMD_SET_PARTICIPANT_ID:
+      case cmdSetParticipantId:
         if (params != null && params.containsKey('participantId')) {
           _settingsService.setParticipantId(params['participantId'] as String);
         }
@@ -183,7 +184,7 @@ class BackgroundServiceManager {
     FlutterForegroundTask.initCommunicationPort();
     
     // Set callback to receive data from background service
-    FlutterForegroundTask.eventChannel.setListener(_handleBackgroundData);
+    FlutterForegroundTask.setReceiveDataCallback(_handleBackgroundData);
     
     _isInitialized = true;
   }
@@ -222,18 +223,15 @@ class BackgroundServiceManager {
         channelId: 'open_earable_sport_study',
         channelName: 'OpenEarable Sport Study',
         channelDescription: 'Background service for OpenEarable Sport Study app',
-        importance: NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
+      foregroundTaskOptions: const ForegroundTaskOptions(
         eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: true,
-        allowWifiLock: true,
       ),
     );
   }
@@ -254,13 +252,13 @@ class BackgroundServiceManager {
       callback: startCallback,
     );
     
-    return result == ServiceRequestResult.SUCCESS;
+    return result;
   }
   
   /// Stop the foreground service
   Future<bool> stopService() async {
     final result = await FlutterForegroundTask.stopService();
-    return result == ServiceRequestResult.SUCCESS;
+    return result;
   }
   
   /// Check if the foreground service is running
@@ -296,14 +294,14 @@ class BackgroundServiceManager {
     sendCommand(OpenEarableBackgroundTaskHandler.cmdConnectDevice, {
       'deviceId': deviceId,
       'deviceName': deviceName,
-    },);
+    });
   }
 
   /// Set participant ID in the background service
   void setParticipantId(String participantId) {
     sendCommand(OpenEarableBackgroundTaskHandler.cmdSetParticipantId, {
       'participantId': participantId,
-    },);
+    });
   }
   
   /// Dispose the background service manager

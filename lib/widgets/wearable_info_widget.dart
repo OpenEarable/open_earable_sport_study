@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'grouped_box.dart';
 
@@ -29,8 +28,7 @@ class _WearableInfoWidgetState extends State<WearableInfoWidget> {
   @override
   Widget build(BuildContext context) {
     // We no longer have access to the wearable icon path method
-    // Can use a default icon instead
-    final wearableIconPath = 'assets/images/wearable_default.svg';
+    // Using a Material icon instead
 
     return GroupedBox(
       title: widget.deviceInfo['name'] as String,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/connected_device_controller.dart';
 import '../controllers/settings_controller.dart';
@@ -33,7 +32,7 @@ class ScanView extends StatelessWidget {
       Widget tile;
       if (discoveredMap.containsKey(autoDevice.id)) {
         tile = _InteractiveTile(
-          device: discoveredMap[autoDevice.id],
+          device: discoveredMap[autoDevice.id]!,
           enableManualConnectionChange: enableManualConnectionChange,
           autoConnectDevice: true,
         );
